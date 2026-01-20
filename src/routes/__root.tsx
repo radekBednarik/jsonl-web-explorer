@@ -4,9 +4,11 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 import Header from "../components/Header";
 
+import { ThemeProvider } from "../components/theme-provider";
+
 export const Route = createRootRoute({
 	component: () => (
-		<>
+		<ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
 			<Header />
 			<Outlet />
 			<TanStackDevtools
@@ -20,6 +22,6 @@ export const Route = createRootRoute({
 					},
 				]}
 			/>
-		</>
+		</ThemeProvider>
 	),
 });

@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Home, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { ModeToggle } from "./mode-toggle";
 
 export default function Header() {
 	const [isOpen, setIsOpen] = useState(false);
@@ -26,6 +27,9 @@ export default function Header() {
 						JSONL Web Explorer
 					</Link>
 				</h1>
+				<div className="ml-auto">
+					<ModeToggle />
+				</div>
 			</header>
 
 			<aside
