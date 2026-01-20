@@ -16,13 +16,14 @@ export default function Header() {
 				>
 					<Menu size={24} />
 				</button>
-				<h1 className="ml-4 text-xl font-semibold">
-					<Link to="/">
+				<h1 className="ml-4 text-xl font-semibold flex items-center gap-2">
+					<Link to="/" className="flex items-center gap-2">
 						<img
-							src="/tanstack-word-logo-white.svg"
-							alt="TanStack Logo"
-							className="h-10"
+							src="/logo.svg"
+							alt="JSONL Web Explorer Logo"
+							className="h-8 w-8"
 						/>
+						JSONL Web Explorer
 					</Link>
 				</h1>
 			</header>
