@@ -1,4 +1,14 @@
-import { FileText } from "lucide-react";
+import {
+	type Column,
+	type ColumnDef,
+	flexRender,
+	getCoreRowModel,
+	getSortedRowModel,
+	type SortingState,
+	useReactTable,
+} from "@tanstack/react-table";
+import { ChevronDown, ChevronsUpDown, ChevronUp, FileText } from "lucide-react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ResizablePanel } from "@/components/ui/resizable";
 import {
@@ -20,6 +30,73 @@ interface LogTableProps {
 	hasFiles: boolean;
 }
 
+function SortIcon({ column }: { column: Column<LogEntry> }) {
+	const sorted = column.getIsSorted();
+	if (sorted === "asc") return <ChevronUp className="h-3 w-3" />;
+	if (sorted === "desc") return <ChevronDown className="h-3 w-3" />;
+	return <ChevronsUpDown className="h-3 w-3 opacity-40" />;
+}
+
+const columns: ColumnDef<LogEntry>[] = [
+	{
+		id: "timestamp",
+		header: "Timestamp",
+		accessorFn: (row) => row.timestamp ?? "",
+		cell: ({ row }) => (
+			<span className="font-mono text-xs whitespace-nowrap text-muted-foreground">
+				{row.original.timestamp || "-"}
+			</span>
+		),
+	},
+	{
+		accessorKey: "level",
+		header: "Level",
+		cell: ({ row }) =>
+			row.original.level ? (
+				<Badge
+					variant={
+						getLevelBadgeColor(row.original.level) as
+							| "default"
+							| "secondary"
+							| "destructive"
+							| "outline"
+					}
+					className={getBadgeClassName(row.original.level)}
+				>
+					{row.original.level.toUpperCase()}
+				</Badge>
+			) : null,
+	},
+	{
+		accessorKey: "message",
+		header: "Message",
+		cell: ({ row }) => (
+			<div
+				className="truncate font-mono text-sm max-w-[500px]"
+				title={row.original.message}
+			>
+				{row.original.message}
+			</div>
+		),
+	},
+	{
+		accessorKey: "sourceFile",
+		header: "Source",
+		cell: ({ row }) => (
+			<span className="text-xs text-muted-foreground truncate block max-w-[150px]">
+				{row.original.sourceFile}
+			</span>
+		),
+	},
+];
+
+const columnClassNames: Record<string, string> = {
+	timestamp: "w-[180px]",
+	level: "w-[100px]",
+	message: "",
+	sourceFile: "w-[150px] hidden md:table-cell",
+};
+
 export function LogTable({
 	logs,
 	filteredLogs,
@@ -27,6 +104,20 @@ export function LogTable({
 	onLogSelect,
 	hasFiles,
 }: LogTableProps) {
+	const [sorting, setSorting] = useState<SortingState>([
+		{ id: "timestamp", desc: false },
+	]);
+
+	const table = useReactTable({
+		data: filteredLogs,
+		columns,
+		state: { sorting },
+		onSortingChange: setSorting,
+		getCoreRowModel: getCoreRowModel(),
+		getSortedRowModel: getSortedRowModel(),
+		enableSortingRemoval: true,
+	});
+
 	return (
 		<ResizablePanel defaultSize={80}>
 			<div className="h-full flex flex-col">
@@ -51,55 +142,62 @@ export function LogTable({
 					<div className="flex-1 overflow-auto">
 						<Table>
 							<TableHeader className="bg-muted/50 sticky top-0 z-10">
-								<TableRow>
-									<TableHead className="w-[180px]">Timestamp</TableHead>
-									<TableHead className="w-[100px]">Level</TableHead>
-									<TableHead>Message</TableHead>
-									<TableHead className="w-[150px] hidden md:table-cell">
-										Source
-									</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{filteredLogs.map((log) => (
-									<TableRow
-										key={log.id}
-										className="cursor-pointer hover:bg-muted/50"
-										onClick={() => onLogSelect(log)}
-									>
-										<TableCell className="font-mono text-xs whitespace-nowrap text-muted-foreground">
-											{log.timestamp || "-"}
-										</TableCell>
-										<TableCell>
-											{log.level && (
-												<Badge
-													variant={
-														getLevelBadgeColor(log.level) as
-															| "default"
-															| "secondary"
-															| "destructive"
-															| "outline"
-													}
-													className={getBadgeClassName(log.level)}
-												>
-													{log.level.toUpperCase()}
-												</Badge>
-											)}
-										</TableCell>
-										<TableCell className="max-w-[500px]">
-											<div
-												className="truncate font-mono text-sm"
-												title={log.message}
+								{table.getHeaderGroups().map((headerGroup) => (
+									<TableRow key={headerGroup.id}>
+										{headerGroup.headers.map((header) => (
+											<TableHead
+												key={header.id}
+												className={columnClassNames[header.id] ?? ""}
+												onClick={
+													header.column.getCanSort()
+														? () => header.column.toggleSorting()
+														: undefined
+												}
+												style={{
+													cursor: header.column.getCanSort()
+														? "pointer"
+														: "default",
+												}}
 											>
-												{log.message}
-											</div>
-										</TableCell>
-										<TableCell className="text-xs text-muted-foreground hidden md:table-cell truncate max-w-[150px]">
-											{log.sourceFile}
-										</TableCell>
+												<div className="flex items-center gap-1 select-none">
+													{flexRender(
+														header.column.columnDef.header,
+														header.getContext(),
+													)}
+													{header.column.getCanSort() && (
+														<SortIcon column={header.column} />
+													)}
+												</div>
+											</TableHead>
+										))}
 									</TableRow>
 								))}
-								{filteredLogs.length === 0 && (
+							</TableHeader>
+							<TableBody>
+								{table.getRowModel().rows.map((row) => (
+									<TableRow
+										key={row.id}
+										className="cursor-pointer hover:bg-muted/50"
+										onClick={() => onLogSelect(row.original)}
+									>
+										{row.getVisibleCells().map((cell) => (
+											<TableCell
+												key={cell.id}
+												className={
+													cell.column.id === "sourceFile"
+														? "hidden md:table-cell"
+														: undefined
+												}
+											>
+												{flexRender(
+													cell.column.columnDef.cell,
+													cell.getContext(),
+												)}
+											</TableCell>
+										))}
+									</TableRow>
+								))}
+								{table.getRowModel().rows.length === 0 && (
 									<TableRow>
 										<TableCell colSpan={4} className="h-24 text-center">
 											No results found for "{searchQuery}"
