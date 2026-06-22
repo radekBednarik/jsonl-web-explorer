@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { JsonViewer } from "@/components/ui/json-viewer";
 import { Separator } from "@/components/ui/separator";
 import {
 	Sheet,
@@ -21,7 +22,7 @@ export function LogDetailsSheet({
 }: LogDetailsSheetProps) {
 	return (
 		<Sheet open={!!selectedLog} onOpenChange={(open) => !open && onClose()}>
-			<SheetContent className="sm:max-w-xl w-[90vw] overflow-y-auto">
+			<SheetContent className="sm:max-w-xl w-[90vw] overflow-y-auto pl-2">
 				<SheetHeader className="mb-6">
 					<SheetTitle>Log Details</SheetTitle>
 					<SheetDescription className="font-mono text-xs truncate">
@@ -80,11 +81,9 @@ export function LogDetailsSheet({
 
 						<div className="space-y-2">
 							<h4 className="text-sm font-medium text-muted-foreground">
-								Raw JSON
+								JSON
 							</h4>
-							<div className="p-3 bg-zinc-950 text-zinc-50 rounded-md text-xs font-mono overflow-x-auto">
-								<pre>{JSON.stringify(selectedLog.raw, null, 2)}</pre>
-							</div>
+							<JsonViewer data={selectedLog.raw} defaultDepth={1} />
 						</div>
 					</div>
 				)}
