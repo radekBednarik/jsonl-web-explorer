@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronsDownUp, ChevronsUpDown } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
@@ -200,14 +200,52 @@ const JsonNode = React.memo(function JsonNode({
 });
 
 export function JsonViewer({ data, defaultDepth = 1, className }: JsonViewerProps) {
+	const [expandKey, setExpandKey] = React.useState(0);
+	const [activeDefaultDepth, setActiveDefaultDepth] = React.useState(defaultDepth);
+
+	React.useEffect(() => {
+		setActiveDefaultDepth(defaultDepth);
+		setExpandKey((k) => k + 1);
+	}, [data, defaultDepth]);
+
+	const handleExpandAll = () => {
+		setActiveDefaultDepth(Infinity);
+		setExpandKey((k) => k + 1);
+	};
+
+	const handleCollapseAll = () => {
+		setActiveDefaultDepth(0);
+		setExpandKey((k) => k + 1);
+	};
+
 	return (
 		<div
 			className={cn(
-				"p-3 bg-zinc-950 text-zinc-50 rounded-md text-xs font-mono overflow-x-auto",
+				"bg-zinc-950 text-zinc-50 rounded-md text-xs font-mono overflow-x-auto",
 				className,
 			)}
 		>
-			<JsonNode value={data} depth={0} defaultDepth={defaultDepth} isLast={true} />
+			<div className="flex justify-end gap-1 px-3 pt-2 pb-1 border-b border-zinc-800">
+				<button
+					type="button"
+					onClick={handleExpandAll}
+					className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+				>
+					<ChevronsUpDown size={11} />
+					<span>Expand All</span>
+				</button>
+				<button
+					type="button"
+					onClick={handleCollapseAll}
+					className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+				>
+					<ChevronsDownUp size={11} />
+					<span>Collapse All</span>
+				</button>
+			</div>
+			<div key={expandKey} className="p-3">
+				<JsonNode value={data} depth={0} defaultDepth={activeDefaultDepth} isLast={true} />
+			</div>
 		</div>
 	);
 }
